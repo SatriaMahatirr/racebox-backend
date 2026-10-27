@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RaceBox - Status Pendaftaran Akun</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/style.css">
+  <style>
+    .rb-status-box {
+      max-width: 580px;
+      margin: 40px auto;
+      background: var(--rb-bg-card-elevated);
+      border: 1px solid var(--rb-border-bright);
+      border-radius: 12px;
+      padding: 32px 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      text-align: center;
+    }
+    .rb-status-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 480px) {
+      .rb-status-box {
+        margin: 20px auto;
+        padding: 24px 16px;
+      }
+      .rb-status-form-row {
+        flex-direction: column !important;
+      }
+      .rb-status-form-row .btn {
+        width: 100%;
+        height: 44px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="rb-header">
+    <a href="/admin/register-status" class="rb-brand" style="margin: 0 auto;">
+      <div class="rb-logo-mark">R</div>
+      <div class="rb-brand-title">RACE<span>BOX</span></div>
+      <div class="rb-brand-badge">REGISTRATION STATUS</div>
+    </a>
+  </header>
+
+  <main class="rb-container">
+    <div class="rb-status-box">
+
+      <% if (!account && email) { %>
+        <!-- Email Not Found -->
+        <div class="rb-status-icon" style="background: rgba(255, 59, 48, 0.15); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3);">
+          ✕
+        </div>
+        <h2 style="font-size: 20px; font-weight: 700; color: #FFF; margin-bottom: 10px;">Akun Tidak Ditemukan</h2>
+        <p style="color: var(--rb-steel); font-size: 14px; margin-bottom: 24px;">
+          Tidak ada pendaftaran dengan email <strong><%= email %></strong> di sistem RaceBox.
+        </p>
+
+      <% } else if (account && account.status === 'pending') { %>
+        <!-- Pending State -->
+        <div class="rb-status-icon" style="background: rgba(255, 176, 32, 0.15); color: #FFB020; border: 1px solid rgba(255, 176, 32, 0.3);">
+          ⏳
+        </div>
+        <div class="badge-status badge-status-pending" style="margin-bottom: 12px;">MENUNGGU PERSETUJUAN ADMIN</div>
+        <h2 style="font-size: 22px; font-weight: 800; color: #FFF; margin-bottom: 12px;">Pendaftaran Sedang Ditinjau</h2>
+        <p style="color: var(--rb-silver); font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+          Pendaftaran berhasil dikirim. Akun RACEBOX Anda (<strong style="color:#FFF;"><%= account.email %></strong>) sedang menunggu persetujuan admin. Anda akan dapat menggunakan aplikasi setelah akun disetujui.
+        </p>
+        <div style="background: var(--rb-bg-card); padding: 14px; border-radius: 6px; border: 1px solid var(--rb-border); margin-bottom: 24px; text-align: left; font-size: 13px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+            <span style="color: var(--rb-steel);">Nama Pendaftar:</span>
+            <strong style="color: #FFF;"><%= account.name %></strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color: var(--rb-steel);">Waktu Registrasi:</span>
+            <span style="color: var(--rb-silver);"><%= new Date(account.created_at).toLocaleString('id-ID') %></span>
+          </div>
+        </div>
+
+      <% } else if (account && account.status === 'approved') { %>
+        <!-- Approved State -->
+        <div class="rb-status-icon" style="background: rgba(62, 207, 142, 0.15); color: #3ECF8E; border: 1px solid rgba(62, 207, 142, 0.3);">
+          ✓
+        </div>
+        <div class="badge-status badge-status-approved" style="margin-bottom: 12px;">AKUN TELAH DISETUJUI</div>
+        <h2 style="font-size: 22px; font-weight: 800; color: #FFF; margin-bottom: 12px;">Selamat Datang di RaceBox!</h2>
+        <p style="color: var(--rb-silver); font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+          Akun Anda telah <strong>disetujui</strong> oleh administrator. Silakan buka aplikasi mobile atau login ke sistem RACEBOX untuk mulai mencatat performa telemetri balap Anda.
+        </p>
+
+      <% } else if (account && account.status === 'rejected') { %>
+        <!-- Rejected State -->
+        <div class="rb-status-icon" style="background: rgba(255, 59, 48, 0.15); color: #FF3B30; border: 1px solid rgba(255, 59, 48, 0.3);">
+          ✕
+        </div>
+        <div class="badge-status badge-status-rejected" style="margin-bottom: 12px;">PENDAFTARAN BELUM DISETUJUI</div>
+        <h2 style="font-size: 22px; font-weight: 800; color: #FFF; margin-bottom: 12px;">Pendaftaran Ditolak</h2>
+        <p style="color: var(--rb-silver); font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+          Mohon maaf, pendaftaran akun Anda untuk saat ini belum disetujui oleh administrator.
+        </p>
+        <% if (account.rejection_reason) { %>
+          <div style="background: rgba(255, 59, 48, 0.1); border: 1px solid rgba(255, 59, 48, 0.3); padding: 14px; border-radius: 6px; margin-bottom: 24px; text-align: left;">
+            <div style="font-size: 11px; font-weight: 700; color: #FF3B30; text-transform: uppercase; margin-bottom: 4px;">Alasan Penolakan:</div>
+            <div style="font-size: 13px; color: var(--rb-chrome-white);">"<%= account.rejection_reason %>"</div>
+          </div>
+        <% } %>
+
+      <% } else if (account && account.status === 'suspended') { %>
+        <!-- Suspended State -->
+        <div class="rb-status-icon" style="background: rgba(168, 85, 247, 0.15); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.3);">
+          ⏸
+        </div>
+        <div class="badge-status badge-status-suspended" style="margin-bottom: 12px;">AKUN DITANGGUHKAN</div>
+        <h2 style="font-size: 22px; font-weight: 800; color: #FFF; margin-bottom: 12px;">Akses Akun Dinonaktifkan Sementara</h2>
+        <p style="color: var(--rb-silver); font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+          Akun Anda sedang ditangguhkan dan akses aplikasi dibatasi oleh administrator.
+        </p>
+      <% } %>
+
+      <!-- Check Email Form -->
+      <form method="get" action="/admin/register-status" style="margin-top: 24px;">
+        <div style="font-size: 12px; color: var(--rb-steel); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
+          <%= account ? 'Periksa Status Akun Lain' : 'Masukkan Email Akun Anda' %>
+        </div>
+        <div class="rb-status-form-row" style="display: flex; gap: 8px; max-width: 420px; margin: 0 auto;">
+          <input type="email" name="email" value="<%= email || '' %>" placeholder="nama@email.com" required
+                 class="form-control" style="flex: 1; text-align: center; height: 44px; font-size: 16px;">
+          <button type="submit" class="btn btn-primary" style="height: 44px; padding: 0 18px; font-weight: 700;">
+            Periksa Status
+          </button>
+        </div>
+      </form>
+
+      <% if (account && account.status === 'pending') { %>
+        <div style="margin-top: 20px;">
+          <a href="/admin/register-status?email=<%= encodeURIComponent(account.email) %>" class="btn btn-secondary btn-sm">
+            ↻ Muat Ulang Status Terbaru
+          </a>
+        </div>
+      <% } %>
+
+    </div>
+  </main>
+
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RaceBox - Detail Sesi Telemetri</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/style.css">
+</head>
+<body>
+
+  <%- include('partials/nav', { activeTab: 'races', badgeText: 'ANALYTICS CENTER' }) %>
+
+  <main class="rb-container">
+
+    <div class="rb-page-header">
+      <div class="rb-page-title-group">
+        <h1>Detail Sesi Telemetri #<%= race.id.substring(0, 8) %></h1>
+        <div class="rb-page-subtitle">
+          <%= race.vehicle_name || 'Motor' %> · <%= race.test_type %> · <%= new Date(race.created_at).toLocaleString('id-ID') %>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <a href="/admin/races" class="btn btn-secondary">← Kembali ke Daftar Sesi</a>
+      </div>
+    </div>
+
+    <!-- Dua Kartu Ringkasan Informasi -->
+    <div class="rb-grid-2">
+      
+      <!-- Informasi Sesi & Kendaraan -->
+      <div class="rb-chart-card">
+        <div class="rb-card-header">
+          <div class="rb-card-title">Informasi Rider & Motor</div>
+          <span class="badge badge-red"><%= race.test_type %></span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Rider (Pengguna)</span>
+          <span class="rb-kv-value"><%= race.user_name %></span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Alamat Email</span>
+          <span class="rb-kv-value"><%= race.user_email %></span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Sepeda Motor</span>
+          <span class="rb-kv-value"><%= race.vehicle_name || '-' %></span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Tipe & Kapasitas Mesin</span>
+          <span class="rb-kv-value"><%= race.vehicle_type || 'Standard' %> <%= race.vehicle_cc ? '(' + race.vehicle_cc + 'cc)' : '' %></span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Target Nilai</span>
+          <span class="rb-kv-value"><%= race.target_value %></span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Kualitas Sensor/GPS</span>
+          <span class="rb-kv-value">
+            <span class="badge <%= race.data_quality === 'good' ? 'badge-success' : (race.data_quality === 'fair' ? 'badge-warning' : 'badge-silver') %>">
+              <%= race.data_quality %> (<%= race.data_quality_score %>)
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Hasil Performa Pengujian -->
+      <div class="rb-chart-card">
+        <div class="rb-card-header">
+          <div class="rb-card-title">Hasil Analisis & Rekor Waktu</div>
+          <span class="badge badge-silver"><%= telemetry.length %> Titik Telemetri</span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Top Speed (Kecepatan Puncak)</span>
+          <span class="rb-kv-value" style="color:var(--rb-primary-light);font-size:16px;">
+            <%= race.max_speed_kmh ? Number(race.max_speed_kmh).toFixed(1) + ' km/h' : '-' %>
+          </span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Waktu 0–60 km/h</span>
+          <span class="rb-kv-value"><%= race.time_0_60_ms ? (Number(race.time_0_60_ms) / 1000).toFixed(3) + ' detik' : '-' %></span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Waktu 0–100 km/h</span>
+          <span class="rb-kv-value"><%= race.time_0_100_ms ? (Number(race.time_0_100_ms) / 1000).toFixed(3) + ' detik' : '-' %></span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Drag 201 Meter (1/8 mil)</span>
+          <span class="rb-kv-value" style="color:var(--rb-chrome-white);">
+            <%= race.time_201m_ms ? (Number(race.time_201m_ms) / 1000).toFixed(3) + ' detik' : '-' %>
+          </span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Drag 402 Meter (1/4 mil)</span>
+          <span class="rb-kv-value" style="color:var(--rb-chrome-white);">
+            <%= race.time_402m_ms ? (Number(race.time_402m_ms) / 1000).toFixed(3) + ' detik' : '-' %>
+          </span>
+        </div>
+        <div class="rb-kv-row">
+          <span class="rb-kv-label">Akselerasi Maksimum</span>
+          <span class="rb-kv-value"><%= race.max_acceleration_ms2 ? race.max_acceleration_ms2 + ' m/s²' : '-' %></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Grafik Interaktif Kurva Telemetri Speed vs Waktu -->
+    <div class="rb-chart-card" style="margin-bottom:24px;">
+      <div class="rb-card-header">
+        <div>
+          <div class="rb-card-title">Kurva Kecepatan & Telemetri Aktual (Speed vs Timestamp)</div>
+          <div class="rb-card-subtitle">Profil akselerasi titik demi titik hasil perekaman sensor 10–50Hz</div>
+        </div>
+      </div>
+      <div class="rb-chart-box" id="chartTelemetryCurve" style="height:320px;"></div>
+    </div>
+
+    <!-- Tabel Titik Telemetri Mentah -->
+    <div class="rb-table-card">
+      <div class="rb-card-header" style="padding:16px 20px;border-bottom:1px solid var(--rb-border);margin:0;">
+        <div class="rb-card-title">Log Titik Telemetri GPS & Sensor (<%= telemetry.length %> sampel)</div>
+      </div>
+      <div class="rb-table-hint">
+        <span>👈 Geser tabel ke kanan untuk melihat data telemetri lengkap 👉</span>
+      </div>
+      <div class="rb-table-wrap">
+        <table class="rb-table">
+          <thead>
+            <tr>
+              <th>Timestamp (ms)</th>
+              <th>Speed (km/h)</th>
+              <th>Akselerasi (m/s²)</th>
+              <th>G-Force</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Altitude (m)</th>
+              <th>Akurasi GPS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% telemetry.forEach(t => { %>
+              <tr>
+                <td><%= t.timestamp_ms %></td>
+                <td><strong style="color:var(--rb-primary-light);"><%= t.speed_kmh ?? '-' %></strong></td>
+                <td><%= t.acceleration_ms2 ?? '-' %></td>
+                <td><%= t.g_force ?? '-' %></td>
+                <td><%= t.latitude ?? '-' %></td>
+                <td><%= t.longitude ?? '-' %></td>
+                <td><%= t.altitude ?? '-' %></td>
+                <td><%= t.gps_accuracy ? t.gps_accuracy + ' m' : '-' %></td>
+              </tr>
+            <% }) %>
+            <% if (!telemetry.length) { %>
+              <tr>
+                <td colspan="8" class="rb-empty-state">
+                  <div class="rb-empty-icon">📡</div>
+                  <div class="rb-empty-title">Tidak Ada Titik Telemetri Tersimpan</div>
+                  <div class="rb-empty-desc">Sesi ini hanya menyimpan ringkasan waktu tanpa titik telemetri streaming.</div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Script ECharts untuk visualisasi kurva telemetri -->
+  <script src="/admin/assets/echarts.min.js"></script>
+  <script>
+    (function () {
+      var telemetryData = <%- JSON.stringify(telemetry || []) %>;
+      var chartEl = document.getElementById('chartTelemetryCurve');
+      if (!chartEl) return;
+      var chart = echarts.init(chartEl);
+
+      if (!telemetryData || telemetryData.length === 0) {
+        chart.setOption({
+          title: {
+            text: 'Tidak ada data titik telemetri untuk sesi ini',
+            left: 'center',
+            top: 'center',
+            textStyle: { color: '#7C7C84', fontSize: 13 }
+          }
+        });
+        return;
+      }
+
+      var times = [];
+      var speeds = [];
+      var accels = [];
+      var startMs = telemetryData[0].timestamp_ms;
+
+      telemetryData.forEach(function (t) {
+        var relSec = ((t.timestamp_ms - startMs) / 1000).toFixed(2);
+        times.push(relSec + 's');
+        speeds.push(t.speed_kmh ? Number(t.speed_kmh) : 0);
+        accels.push(t.acceleration_ms2 ? Number(t.acceleration_ms2) : 0);
+      });
+
+      chart.setOption({
+        backgroundColor: 'transparent',
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: '#111113',
+          borderColor: '#3A3A40',
+          borderWidth: 1,
+          textStyle: { color: '#F2F2F2', fontSize: 12 }
+        },
+        legend: {
+          data: ['Kecepatan (km/h)', 'Akselerasi (m/s²)'],
+          textStyle: { color: '#B8B8B8' }
+        },
+        grid: { top: 35, bottom: 25, left: 45, right: 35 },
+        xAxis: {
+          type: 'category',
+          data: times,
+          axisLine: { lineStyle: { color: '#232327' } },
+          axisLabel: { color: '#7C7C84', fontSize: 11 }
+        },
+        yAxis: [
+          {
+            type: 'value',
+            name: 'km/h',
+            nameTextStyle: { color: '#7C7C84' },
+            splitLine: { lineStyle: { color: '#1B1B1F', type: 'dashed' } },
+            axisLabel: { color: '#7C7C84', fontSize: 11 }
+          },
+          {
+            type: 'value',
+            name: 'm/s²',
+            nameTextStyle: { color: '#7C7C84' },
+            splitLine: { show: false },
+            axisLabel: { color: '#7C7C84', fontSize: 11 }
+          }
+        ],
+        series: [
+          {
+            name: 'Kecepatan (km/h)',
+            type: 'line',
+            smooth: true,
+            showSymbol: false,
+            itemStyle: { color: '#E10600' },
+            lineStyle: { width: 3, color: '#E10600' },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(225, 6, 0, 0.45)' },
+                { offset: 1, color: 'rgba(225, 6, 0, 0.02)' }
+              ])
+            },
+            data: speeds
+          },
+          {
+            name: 'Akselerasi (m/s²)',
+            type: 'line',
+            yAxisIndex: 1,
+            smooth: true,
+            showSymbol: false,
+            itemStyle: { color: '#F2F2F2' },
+            lineStyle: { width: 1.5, color: '#B8B8B8', type: 'dashed' },
+            data: accels
+          }
+        ]
+      });
+
+      window.addEventListener('resize', function () { chart.resize(); });
+    })();
+  </script>
+  <script src="/admin/assets/mobile-nav.js"></script>
+</body>
+</html>

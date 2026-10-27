@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RaceBox - Garasi Per Pemilik</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/style.css">
+  <style>
+    .owner-group {
+      margin-bottom: 2rem;
+      border: 1px solid var(--rb-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .owner-header {
+      background: var(--rb-surface-raised);
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--rb-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .owner-info h3 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.125rem;
+      color: var(--rb-text-primary);
+    }
+    .owner-email {
+      font-size: 0.875rem;
+      color: var(--rb-steel);
+    }
+    .owner-stats {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.875rem;
+    }
+    .owner-stat {
+      text-align: center;
+    }
+    .owner-stat-value {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--rb-primary-light);
+    }
+    .owner-stat-label {
+      color: var(--rb-steel);
+      margin-top: 0.25rem;
+    }
+    .vehicle-list {
+      padding: 0;
+    }
+    .vehicle-item {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--rb-border);
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+      gap: 1rem;
+      align-items: center;
+    }
+    .vehicle-item:last-child {
+      border-bottom: none;
+    }
+    .vehicle-item:hover {
+      background: var(--rb-surface-base);
+    }
+    .vehicle-name {
+      font-weight: 600;
+      color: var(--rb-text-primary);
+    }
+    .no-vehicles {
+      padding: 2rem;
+      text-align: center;
+      color: var(--rb-steel);
+      font-style: italic;
+    }
+    .filter-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+    }
+    .filter-bar input,
+    .filter-bar select {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--rb-border);
+      border-radius: 6px;
+      background: var(--rb-surface-base);
+      color: var(--rb-text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('partials/nav', { activeTab: 'garage-owners', badgeText: 'ANALYTICS CENTER' }) %>
+
+  <main class="rb-container">
+
+    <div class="rb-page-header">
+      <div class="rb-page-title-group">
+        <h1>Garasi Per Pemilik</h1>
+        <div class="rb-page-subtitle">
+          Kelola dan monitor garasi sepeda motor berdasarkan pemilik akun
+        </div>
+      </div>
+      <div>
+        <a href="/admin/vehicles" class="btn btn-secondary">Lihat Semua Motor</a>
+        <a href="/admin" class="btn btn-secondary">← Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Statistik Global -->
+    <% if (typeof globalStats !== 'undefined' && globalStats) { %>
+    <div class="stats-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem;">
+      <div class="stat-box" style="background:var(--rb-surface-raised);padding:1rem 1.25rem;border-radius:8px;border:1px solid var(--rb-border);">
+        <div style="font-size:1.5rem;font-weight:700;color:var(--rb-primary-light);"><%= globalStats.total_vehicles %></div>
+        <div style="font-size:0.8rem;color:var(--rb-steel);">Total Motor di Server</div>
+      </div>
+      <div class="stat-box" style="background:var(--rb-surface-raised);padding:1rem 1.25rem;border-radius:8px;border:1px solid var(--rb-border);">
+        <div style="font-size:1.5rem;font-weight:700;color:var(--rb-primary-light);"><%= globalStats.total_owners %></div>
+        <div style="font-size:0.8rem;color:var(--rb-steel);">Pemilik Aktif</div>
+      </div>
+      <div class="stat-box" style="background:var(--rb-surface-raised);padding:1rem 1.25rem;border-radius:8px;border:1px solid var(--rb-border);">
+        <div style="font-size:1.5rem;font-weight:700;color:<%= Number(globalStats.orphaned_vehicles) > 0 ? '#F87171' : 'var(--rb-primary-light)' %>;">
+          <%= globalStats.orphaned_vehicles %>
+        </div>
+        <div style="font-size:0.8rem;color:var(--rb-steel);">Motor Tanpa Pemilik Valid</div>
+      </div>
+    </div>
+    <% } %>
+
+    <div class="filter-bar">
+      <input type="text" id="searchOwner" placeholder="Cari nama atau email pemilik..." style="flex: 1;">
+      <select id="filterStatus">
+        <option value="">Semua Status</option>
+        <option value="approved">Approved</option>
+        <option value="pending">Pending</option>
+        <option value="suspended">Suspended</option>
+      </select>
+    </div>
+
+    <div id="ownersList">
+      <% if (owners && owners.length > 0) { %>
+        <% owners.forEach(owner => { %>
+          <div class="owner-group" data-owner-name="<%= owner.owner_name.toLowerCase() %>" data-owner-email="<%= owner.owner_email.toLowerCase() %>" data-owner-status="<%= owner.owner_status %>">
+            <div class="owner-header">
+              <div class="owner-info">
+                <h3>
+                  <%= owner.owner_name %>
+                  <% if (owner.owner_status === 'approved') { %>
+                    <span class="badge badge-success">✓ Verified</span>
+                  <% } else if (owner.owner_status === 'pending') { %>
+                    <span class="badge badge-warning">⏳ Pending</span>
+                  <% } else if (owner.owner_status === 'suspended') { %>
+                    <span class="badge badge-danger">⛔ Suspended</span>
+                  <% } %>
+                </h3>
+                <div class="owner-email"><%= owner.owner_email %> · Terdaftar: <%= new Date(owner.owner_since).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) %></div>
+              </div>
+              <div class="owner-stats">
+                <div class="owner-stat">
+                  <div class="owner-stat-value"><%= owner.total_vehicles || 0 %></div>
+                  <div class="owner-stat-label">Motor</div>
+                </div>
+                <div class="owner-stat">
+                  <div class="owner-stat-value"><%= owner.total_setups || 0 %></div>
+                  <div class="owner-stat-label">Setup</div>
+                </div>
+                <div class="owner-stat">
+                  <div class="owner-stat-value"><%= owner.total_races || 0 %></div>
+                  <div class="owner-stat-label">Sesi</div>
+                </div>
+                <div class="owner-stat">
+                  <div class="owner-stat-value">
+                    <%= owner.best_top_speed ? Number(owner.best_top_speed).toFixed(1) : '-' %>
+                  </div>
+                  <div class="owner-stat-label">Top Speed</div>
+                </div>
+              </div>
+            </div>
+            <div class="vehicle-list">
+              <% if (owner.vehicles && owner.vehicles.length > 0) { %>
+                <% owner.vehicles.forEach(v => { %>
+                  <div class="vehicle-item">
+                    <div class="vehicle-name"><%= v.name %></div>
+                    <div>
+                      <span class="badge badge-silver"><%= v.type || 'Standard' %></span>
+                    </div>
+                    <div>
+                      <% if (v.custom_cc) { %>
+                        <strong><%= v.custom_cc %> cc</strong>
+                      <% } else if (v.bore_mm && v.stroke_mm) { %>
+                        <%= v.bore_mm %> × <%= v.stroke_mm %> mm
+                      <% } else { %>
+                        <span style="color:var(--rb-steel);">-</span>
+                      <% } %>
+                    </div>
+                    <div><%= v.weight_kg ? v.weight_kg + ' kg' : '-' %></div>
+                    <div><%= v.setups_count ?? 0 %> setup</div>
+                    <div><%= v.races_count ?? 0 %> sesi</div>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <div class="no-vehicles">Belum ada motor di garasi</div>
+              <% } %>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <div class="rb-table-card">
+          <div class="rb-empty-state" style="padding: 3rem;">
+            <div class="rb-empty-icon">🏍️</div>
+            <div class="rb-empty-title">Belum Ada Data Garasi</div>
+            <div class="rb-empty-desc">Pengguna belum menambahkan motor ke garasi mereka.</div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+  </main>
+
+  <script>
+    // Filter functionality
+    const searchInput = document.getElementById('searchOwner');
+    const statusFilter = document.getElementById('filterStatus');
+    const ownerGroups = document.querySelectorAll('.owner-group');
+
+    function applyFilters() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const statusValue = statusFilter.value;
+
+      ownerGroups.forEach(group => {
+        const name = group.dataset.ownerName;
+        const email = group.dataset.ownerEmail;
+        const status = group.dataset.ownerStatus;
+
+        const matchesSearch = !searchTerm || name.includes(searchTerm) || email.includes(searchTerm);
+        const matchesStatus = !statusValue || status === statusValue;
+
+        group.style.display = (matchesSearch && matchesStatus) ? 'block' : 'none';
+      });
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    statusFilter.addEventListener('change', applyFilters);
+  </script>
+
+  <script src="/admin/assets/mobile-nav.js"></script>
+</body>
+</html>

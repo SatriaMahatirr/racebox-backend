@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RaceBox - Garasi Sepeda Motor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/style.css">
+</head>
+<body>
+
+  <%- include('partials/nav', { activeTab: 'vehicles', badgeText: 'ANALYTICS CENTER' }) %>
+
+  <main class="rb-container">
+
+    <div class="rb-page-header">
+      <div class="rb-page-title-group">
+        <h1>Semua Sepeda Motor</h1>
+        <div class="rb-page-subtitle">
+          Daftar lengkap kendaraan dari semua pengguna - Lihat <a href="/admin/garage-owners" style="color: var(--rb-primary-light);">Garasi Per Pemilik</a> untuk monitoring terkelompok
+        </div>
+      </div>
+      <div>
+        <a href="/admin/garage-owners" class="btn btn-primary">Per Pemilik</a>
+        <a href="/admin" class="btn btn-secondary">← Dashboard</a>
+      </div>
+    </div>
+
+    <div class="rb-table-card">
+      <div class="rb-table-hint">
+        <span>👈 Geser tabel ke kanan untuk melihat data lengkap 👉</span>
+      </div>
+      <div class="rb-table-wrap">
+        <table class="rb-table">
+          <thead>
+            <tr>
+              <th>Nama Motor</th>
+              <th>Pemilik (Rider)</th>
+              <th>Status Pemilik</th>
+              <th>Kategori / Tipe</th>
+              <th>Spesifikasi Mesin</th>
+              <th>Bobot</th>
+              <th>Setups</th>
+              <th>Total Sesi</th>
+              <th>Top Speed</th>
+              <th>Dibuat</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% vehicles.forEach(v => { 
+              const ownerMissing = Number(v.owner_invalid) === 1;
+            %>
+              <tr <%= ownerMissing ? 'style="background:rgba(248,113,113,0.08);"' : '' %>>
+                <td><strong><%= v.name %></strong></td>
+                <td>
+                  <% if (ownerMissing) { %>
+                    <span style="color:#F87171;font-weight:600;">⚠️ Pemilik Tidak Valid</span><br>
+                    <span style="font-size:11px;color:var(--rb-steel);">user_id: <%= v.user_id %></span>
+                  <% } else { %>
+                    <%= v.user_name %><br>
+                    <span style="font-size:11px;color:var(--rb-steel);"><%= v.user_email %></span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (ownerMissing) { %>
+                    <span class="badge badge-danger" style="font-size:10px;">YATIM / HILANG</span>
+                  <% } else if (v.user_status === 'approved') { %>
+                    <span class="badge badge-success">✓ Approved</span>
+                  <% } else if (v.user_status === 'pending') { %>
+                    <span class="badge badge-warning">⏳ Pending</span>
+                  <% } else if (v.user_status === 'suspended') { %>
+                    <span class="badge badge-danger">⛔ Suspended</span>
+                  <% } else if (v.user_status === 'rejected') { %>
+                    <span class="badge badge-danger">✗ Rejected</span>
+                  <% } else { %>
+                    <span class="badge badge-silver">-</span>
+                  <% } %>
+                </td>
+                <td><span class="badge badge-silver"><%= v.type || 'Standard' %></span></td>
+                <td>
+                  <% if (v.custom_cc) { %>
+                    <strong><%= v.custom_cc %> cc</strong>
+                  <% } else if (v.bore_mm && v.stroke_mm) { %>
+                    <%= v.bore_mm %> × <%= v.stroke_mm %> mm
+                  <% } else { %>
+                    <span style="color:var(--rb-steel);">-</span>
+                  <% } %>
+                </td>
+                <td><%= v.weight_kg ? v.weight_kg + ' kg' : '-' %></td>
+                <td><%= v.setups_count ?? 0 %> setup</td>
+                <td><%= v.races_count ?? 0 %> sesi</td>
+                <td>
+                  <strong style="color:var(--rb-primary-light);">
+                    <%= v.max_speed ? Number(v.max_speed).toFixed(1) + ' km/h' : '-' %>
+                  </strong>
+                </td>
+                <td><%= new Date(v.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
+              </tr>
+            <% }) %>
+            <% if (!vehicles.length) { %>
+              <tr>
+                <td colspan="10" class="rb-empty-state">
+                  <div class="rb-empty-icon">🏍️</div>
+                  <div class="rb-empty-title">Garasi Masih Kosong</div>
+                  <div class="rb-empty-desc">Tambahkan sepeda motor melalui menu Garasi pada aplikasi mobile RaceBox.</div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/admin/assets/mobile-nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RaceBox - Admin Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/style.css">
+</head>
+<body>
+
+  <div class="rb-login-wrapper">
+    <div class="rb-login-card">
+      <div class="rb-login-header">
+        <div class="rb-logo-mark" style="margin: 0 auto 12px; width: 36px; height: 36px; font-size: 18px;">R</div>
+        <h1>RACE<span>BOX</span></h1>
+        <p>Pusat Komando & Analitik Performa Motor</p>
+      </div>
+
+      <% if (error) { %>
+        <div class="rb-alert-error"><%= error %></div>
+      <% } %>
+
+      <form method="post" action="/admin/login">
+        <div class="rb-form-group">
+          <label class="rb-form-label" for="email">Alamat Email</label>
+          <input class="rb-input" style="width:100%;height:44px;font-size:16px;" type="email" id="email" name="email" placeholder="admin@racebox.local" required autofocus>
+        </div>
+
+        <div class="rb-form-group">
+          <label class="rb-form-label" for="password">Password</label>
+          <input class="rb-input" style="width:100%;height:44px;font-size:16px;" type="password" id="password" name="password" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:14px;margin-top:8px;font-size:14px;font-weight:700;">
+          Masuk ke Analytics Center →
+        </button>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

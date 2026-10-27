@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RaceBox - Analytics Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/style.css">
+</head>
+<body>
+
+  <%- include('partials/nav', { activeTab: 'dashboard', badgeText: 'ANALYTICS CENTER' }) %>
+
+  <main class="rb-container">
+
+    <% if (locals.pendingApprovalsCount > 0) { %>
+      <div class="rb-alert-danger" style="background: rgba(225, 6, 0, 0.15); border: 1px solid var(--rb-primary); margin-bottom: 24px;">
+        <div style="display:flex; align-items:center; gap: 10px;">
+          <span style="font-size: 18px;">⚠️</span>
+          <span>Terdapat <strong><%= locals.pendingApprovalsCount %> pendaftar baru</strong> yang membutuhkan verifikasi dan persetujuan akun.</span>
+        </div>
+        <a href="/admin/approvals" class="btn btn-primary btn-sm">Tinjau Sekarang &rarr;</a>
+      </div>
+    <% } %>
+
+    <!-- Judul & Waktu -->
+    <div class="rb-page-header">
+      <div class="rb-page-title-group">
+        <h1>Pusat Analitik & Telemetri Performa Motor</h1>
+        <div class="rb-page-subtitle">
+          Pemantauan hasil drag, uji akselerasi, dan data telemetri aktual seluruh kendaraan RaceBox
+        </div>
+      </div>
+      <div class="rb-status-badge" style="font-family:var(--rb-font-mono);font-size:13px;">
+        Waktu Server: <span id="rbLiveClock">--:--:--</span>
+      </div>
+    </div>
+
+    <!-- Filter Analitik Interaktif -->
+    <div class="rb-filter-bar">
+      <div class="rb-filter-group">
+        <label class="rb-filter-label" for="filterVehicle">Sepeda Motor:</label>
+        <select class="rb-select" id="filterVehicle">
+          <option value="all">Semua Kendaraan (<%= vehiclesList.length %>)</option>
+          <% vehiclesList.forEach(v => { %>
+            <option value="<%= v.id %>"><%= v.name %> (<%= v.user_name %>)</option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="rb-filter-group">
+        <label class="rb-filter-label" for="filterTestType">Tipe Uji Coba:</label>
+        <select class="rb-select" id="filterTestType">
+          <option value="all">Semua Kategori</option>
+          <option value="0-60">Speed 0–60 km/h</option>
+          <option value="0-100">Speed 0–100 km/h</option>
+          <option value="0-120">Speed 0–120 km/h</option>
+          <option value="201m">Drag 201 Meter (1/8 mi)</option>
+          <option value="402m">Drag 402 Meter (1/4 mi)</option>
+        </select>
+      </div>
+
+      <div class="rb-filter-group">
+        <label class="rb-filter-label" for="filterRange">Rentang Waktu:</label>
+        <select class="rb-select" id="filterRange">
+          <option value="all">Semua Riwayat</option>
+          <option value="30d">30 Hari Terakhir</option>
+          <option value="7d">7 Hari Terakhir</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Kartu Statistik Utama -->
+    <div class="rb-stats-grid">
+      <div class="rb-stat-card accent-red">
+        <div class="rb-stat-title">Total Sesi Uji</div>
+        <div class="rb-stat-value" id="statRacesCount"><%= stats.races %></div>
+        <div class="rb-stat-sub">Sesi tercatat di MySQL</div>
+      </div>
+
+      <div class="rb-stat-card accent-red">
+        <div class="rb-stat-title">Rekor Top Speed</div>
+        <div class="rb-stat-value" id="statTopSpeed" style="color:var(--rb-primary-light);">
+          <%= stats.topSpeed ? stats.topSpeed + ' km/h' : '-' %>
+        </div>
+        <div class="rb-stat-sub">Kecepatan puncak tertinggi</div>
+      </div>
+
+      <div class="rb-stat-card accent-chrome">
+        <div class="rb-stat-title">Rekor Waktu 201m</div>
+        <div class="rb-stat-value" id="statBest201m">
+          <%= stats.best201m ? stats.best201m + ' s' : '-' %>
+        </div>
+        <div class="rb-stat-sub">Drag 201 meter terbaik</div>
+      </div>
+
+      <div class="rb-stat-card accent-chrome">
+        <div class="rb-stat-title">Rekor Waktu 402m</div>
+        <div class="rb-stat-value" id="statBest402m">
+          <%= stats.best402m ? stats.best402m + ' s' : '-' %>
+        </div>
+        <div class="rb-stat-sub">Drag 402 meter terbaik</div>
+      </div>
+
+      <div class="rb-stat-card">
+        <div class="rb-stat-title">Motor di Garasi</div>
+        <div class="rb-stat-value"><%= stats.vehicles %></div>
+        <div class="rb-stat-sub">Total motor terdaftar</div>
+      </div>
+
+      <div class="rb-stat-card">
+        <div class="rb-stat-title">Pengguna Terdaftar</div>
+        <div class="rb-stat-value"><%= stats.users %></div>
+        <div class="rb-stat-sub">Akun rider RaceBox</div>
+      </div>
+    </div>
+
+    <!-- Grafik Analitik Utama -->
+    <div class="rb-charts-grid">
+      
+      <!-- Grafik 1: Profil Kecepatan -->
+      <div class="rb-chart-card">
+        <div class="rb-card-header">
+          <div>
+            <div class="rb-card-title">Tren Kecepatan Puncak Sesi Uji</div>
+            <div class="rb-card-subtitle">Perkembangan Top Speed (km/h) dari setiap run pengujian motor</div>
+          </div>
+        </div>
+        <div class="rb-chart-box" id="chartSpeedProfile"></div>
+      </div>
+
+      <!-- Grafik 2: Rekor Waktu Drag -->
+      <div class="rb-chart-card">
+        <div class="rb-card-header">
+          <div>
+            <div class="rb-card-title">Benchmark Waktu Tempuh Terbaik</div>
+            <div class="rb-card-subtitle">Catatan waktu tercepat (detik) per kategori uji coba</div>
+          </div>
+        </div>
+        <div class="rb-chart-box" id="chartBenchmarks"></div>
+      </div>
+
+    </div>
+
+    <!-- Grafik Distribusi & Leaderboard Motor -->
+    <div class="rb-charts-grid" style="grid-template-columns: 1fr 2fr;">
+      
+      <!-- Donut Distribusi Tipe Uji -->
+      <div class="rb-chart-card">
+        <div class="rb-card-header">
+          <div>
+            <div class="rb-card-title">Distribusi Kategori Pengujian</div>
+            <div class="rb-card-subtitle">Proporsi uji drag vs uji akselerasi</div>
+          </div>
+        </div>
+        <div class="rb-chart-box" id="chartDistDonut" style="height:260px;"></div>
+      </div>
+
+      <!-- Peringkat Sepeda Motor Tercepat -->
+      <div class="rb-chart-card">
+        <div class="rb-card-header">
+          <div>
+            <div class="rb-card-title">Peringkat Motor Tercepat di Garasi</div>
+            <div class="rb-card-subtitle">Sepeda motor dengan catatan performa tertinggi</div>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="/admin/garage-owners" class="btn btn-primary btn-sm">Per Pemilik →</a>
+            <a href="/admin/vehicles" class="btn btn-secondary btn-sm">Semua Motor →</a>
+          </div>
+        </div>
+        
+        <% if (leaderboard && leaderboard.length > 0) { %>
+          <div class="rb-table-wrap">
+            <table class="rb-table">
+              <thead>
+                <tr>
+                  <th>Peringkat</th>
+                  <th>Sepeda Motor</th>
+                  <th>Tipe / CC</th>
+                  <th>Sesi</th>
+                  <th>Top Speed</th>
+                  <th>Best 201m</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% leaderboard.forEach((m, idx) => { %>
+                  <tr>
+                    <td><span class="badge <%= idx === 0 ? 'badge-red' : 'badge-silver' %>">#<%= idx + 1 %></span></td>
+                    <td><strong><%= m.name %></strong></td>
+                    <td><%= m.type || '-' %> <%= m.custom_cc ? '(' + m.custom_cc + 'cc)' : '' %></td>
+                    <td><%= m.sessions_count %> kali</td>
+                    <td><strong style="color:var(--rb-primary-light);"><%= m.top_speed ? Number(m.top_speed).toFixed(1) + ' km/h' : '-' %></strong></td>
+                    <td><%= m.best_201m ? (Number(m.best_201m) / 1000).toFixed(3) + ' s' : '-' %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="rb-empty-state">
+            <div class="rb-empty-icon">🏍️</div>
+            <div class="rb-empty-title">Belum Ada Catatan Waktu di Leaderboard</div>
+            <div class="rb-empty-desc">
+              Data rekor kendaraan akan otomatis diperingkatkan begitu ada sesi uji yang tersimpan di database.
+            </div>
+          </div>
+        <% } %>
+
+      </div>
+
+    </div>
+
+    <!-- Tabel Riwayat Pengujian Terbaru -->
+    <div class="rb-table-card">
+      <div class="rb-card-header" style="padding:16px 20px;border-bottom:1px solid var(--rb-border);margin:0;">
+        <div>
+          <div class="rb-card-title">Riwayat Sesi Pengujian Terbaru</div>
+          <div class="rb-card-subtitle">Daftar sesi pengujian motor yang tersimpan di server MySQL</div>
+        </div>
+        <a href="/admin/races" class="btn btn-secondary btn-sm">Lihat Semua Sesi (<%= stats.races %>) →</a>
+      </div>
+
+      <div class="rb-table-hint">
+        <span>👈 Geser tabel ke kanan untuk melihat data lengkap 👉</span>
+      </div>
+      <div class="rb-table-wrap">
+        <table class="rb-table">
+          <thead>
+            <tr>
+              <th>Waktu Uji</th>
+              <th>Sepeda Motor</th>
+              <th>Rider (Pengguna)</th>
+              <th>Tipe Uji Coba</th>
+              <th>Top Speed</th>
+              <th>Waktu 201m</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="latestRacesTableBody">
+            <% if (latestRaces && latestRaces.length > 0) { %>
+              <% latestRaces.forEach(r => { %>
+                <tr>
+                  <td><%= new Date(r.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) %></td>
+                  <td><strong><%= r.vehicle_name || '-' %></strong></td>
+                  <td><%= r.user_name || '-' %></td>
+                  <td><span class="badge badge-red"><%= r.test_type %></span></td>
+                  <td><strong style="color:var(--rb-primary-light);"><%= r.max_speed_kmh ? Number(r.max_speed_kmh).toFixed(1) + ' km/h' : '-' %></strong></td>
+                  <td><%= r.time_201m_ms ? (Number(r.time_201m_ms) / 1000).toFixed(3) + ' s' : '-' %></td>
+                  <td><a class="btn btn-secondary btn-sm" href="/admin/races/<%= r.id %>">Detail Telemetri</a></td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="rb-empty-state">
+                  <div class="rb-empty-icon">🏁</div>
+                  <div class="rb-empty-title">Belum Ada Sesi Pengujian di Database</div>
+                  <div class="rb-empty-desc">
+                    Lakukan uji akselerasi atau drag menggunakan aplikasi RaceBox yang terhubung ke server ini untuk melihat data telemetri secara real-time.
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Preloaded Data for Chart Engine -->
+  <script>
+    window.__INITIAL_RACES__ = <%- JSON.stringify(latestRaces || []) %>;
+    window.__INITIAL_DIST__ = <%- JSON.stringify(testTypesDist || []) %>;
+  </script>
+  <script src="/admin/assets/echarts.min.js"></script>
+  <script src="/admin/assets/dashboard.js"></script>
+  <script src="/admin/assets/mobile-nav.js"></script>
+</body>
+</html>

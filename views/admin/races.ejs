@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RaceBox - Sesi Pengujian</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/style.css">
+</head>
+<body>
+
+  <%- include('partials/nav', { activeTab: 'races', badgeText: 'ANALYTICS CENTER' }) %>
+
+  <main class="rb-container">
+
+    <div class="rb-page-header">
+      <div class="rb-page-title-group">
+        <h1>Riwayat Seluruh Sesi Pengujian</h1>
+        <div class="rb-page-subtitle">
+          Data riwayat uji drag 201m/402m, top speed, akselerasi, dan waktu tempuh tersimpan di MySQL
+        </div>
+      </div>
+      <div>
+        <a href="/admin" class="btn btn-secondary">← Kembali ke Dashboard</a>
+      </div>
+    </div>
+
+    <div class="rb-table-card">
+      <div class="rb-table-hint">
+        <span>👈 Geser tabel ke kanan untuk melihat data lengkap 👉</span>
+      </div>
+      <div class="rb-table-wrap">
+        <table class="rb-table">
+          <thead>
+            <tr>
+              <th>Waktu Uji</th>
+              <th>Sepeda Motor</th>
+              <th>Rider</th>
+              <th>Tipe Pengujian</th>
+              <th>0–60 km/h</th>
+              <th>0–100 km/h</th>
+              <th>Drag 201m</th>
+              <th>Drag 402m</th>
+              <th>Top Speed</th>
+              <th>Kualitas Sinyal</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% races.forEach(r => { %>
+              <tr>
+                <td><%= new Date(r.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) %></td>
+                <td><strong><%= r.vehicle_name || '-' %></strong></td>
+                <td>
+                  <%= r.user_name %><br>
+                  <span style="font-size:11px;color:var(--rb-steel);"><%= r.user_email %></span>
+                </td>
+                <td><span class="badge badge-red"><%= r.test_type %></span></td>
+                <td><%= r.time_0_60_ms ? (Number(r.time_0_60_ms) / 1000).toFixed(3) + ' s' : '-' %></td>
+                <td><%= r.time_0_100_ms ? (Number(r.time_0_100_ms) / 1000).toFixed(3) + ' s' : '-' %></td>
+                <td><%= r.time_201m_ms ? (Number(r.time_201m_ms) / 1000).toFixed(3) + ' s' : '-' %></td>
+                <td><%= r.time_402m_ms ? (Number(r.time_402m_ms) / 1000).toFixed(3) + ' s' : '-' %></td>
+                <td>
+                  <strong style="color:var(--rb-primary-light);">
+                    <%= r.max_speed_kmh ? Number(r.max_speed_kmh).toFixed(1) + ' km/h' : '-' %>
+                  </strong>
+                </td>
+                <td>
+                  <span class="badge <%= r.data_quality === 'good' ? 'badge-success' : (r.data_quality === 'fair' ? 'badge-warning' : 'badge-silver') %>">
+                    <%= r.data_quality || 'unknown' %>
+                  </span>
+                </td>
+                <td>
+                  <a class="btn btn-secondary btn-sm" href="/admin/races/<%= r.id %>">Detail Telemetri</a>
+                </td>
+              </tr>
+            <% }) %>
+            <% if (!races.length) { %>
+              <tr>
+                <td colspan="11" class="rb-empty-state">
+                  <div class="rb-empty-icon">🏁</div>
+                  <div class="rb-empty-title">Belum Ada Sesi Pengujian</div>
+                  <div class="rb-empty-desc">
+                    Sesi pengujian akselerasi dan drag yang dilakukan pengguna di aplikasi RaceBox akan tercatat di sini.
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/admin/assets/mobile-nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RaceBox - Log Aktivitas Garasi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/style.css">
+  <style>
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-box {
+      background: var(--rb-surface-raised);
+      padding: 1.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--rb-border);
+    }
+    .stat-box-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--rb-primary-light);
+      margin-bottom: 0.25rem;
+    }
+    .stat-box-label {
+      font-size: 0.875rem;
+      color: var(--rb-steel);
+    }
+    .action-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .action-added { background: rgba(110, 231, 183, 0.2); color: #6EE7B7; }
+    .action-updated { background: rgba(56, 189, 248, 0.2); color: #38BDF8; }
+    .action-deleted { background: rgba(248, 113, 113, 0.2); color: #F87171; }
+  </style>
+</head>
+<body>
+
+  <%- include('partials/nav', { activeTab: 'garage-logs', badgeText: 'ANALYTICS CENTER' }) %>
+
+  <main class="rb-container">
+
+    <div class="rb-page-header">
+      <div class="rb-page-title-group">
+        <h1>Log Aktivitas Garasi</h1>
+        <div class="rb-page-subtitle">
+          Riwayat aktivitas penambahan, perubahan, dan penghapusan motor serta setup di garasi
+        </div>
+      </div>
+      <div>
+        <a href="/admin/garage-owners" class="btn btn-secondary">Garasi Per Pemilik</a>
+        <a href="/admin" class="btn btn-secondary">← Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Statistik -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-value"><%= stats.total %></div>
+        <div class="stat-box-label">Total Aktivitas</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value"><%= stats.additions %></div>
+        <div class="stat-box-label">Penambahan</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value"><%= stats.updates %></div>
+        <div class="stat-box-label">Perubahan</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value"><%= stats.deletions %></div>
+        <div class="stat-box-label">Penghapusan</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value"><%= stats.vehicles %></div>
+        <div class="stat-box-label">Aktivitas Motor</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value"><%= stats.setups %></div>
+        <div class="stat-box-label">Aktivitas Setup</div>
+      </div>
+    </div>
+
+    <!-- Tabel Log -->
+    <div class="rb-table-card">
+      <div class="rb-table-hint">
+        <span>👈 Geser tabel ke kanan untuk melihat data lengkap 👉</span>
+      </div>
+      <div class="rb-table-wrap">
+        <table class="rb-table">
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>Pengguna</th>
+              <th>Aksi</th>
+              <th>Motor</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (logs && logs.length > 0) { %>
+              <% logs.forEach(log => { 
+                let actionClass = 'action-added';
+                let actionLabel = log.action;
+                if (log.action.includes('added')) {
+                  actionClass = 'action-added';
+                  actionLabel = '➕ Ditambahkan';
+                } else if (log.action.includes('updated')) {
+                  actionClass = 'action-updated';
+                  actionLabel = '✏️ Diubah';
+                } else if (log.action.includes('deleted')) {
+                  actionClass = 'action-deleted';
+                  actionLabel = '🗑️ Dihapus';
+                }
+              %>
+                <tr>
+                  <td>
+                    <%= new Date(log.created_at).toLocaleString('id-ID', { 
+                      day: '2-digit', 
+                      month: 'short', 
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }) %>
+                  </td>
+                  <td>
+                    <strong><%= log.user_name %></strong><br>
+                    <span style="font-size:11px;color:var(--rb-steel);"><%= log.user_email %></span>
+                  </td>
+                  <td>
+                    <span class="action-badge <%= actionClass %>">
+                      <%= actionLabel %>
+                    </span>
+                  </td>
+                  <td>
+                    <%= log.vehicle_name || '-' %>
+                  </td>
+                  <td>
+                    <% if (log.details) { 
+                      try {
+                        const details = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
+                    %>
+                      <code style="font-size: 11px; color: var(--rb-steel);">
+                        <%= details.name || '' %> 
+                        <%= details.type ? `(${details.type})` : '' %>
+                        <%= details.customCc ? `${details.customCc}cc` : '' %>
+                      </code>
+                    <% } catch(e) { %>
+                      -
+                    <% } } else { %>
+                      -
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" class="rb-empty-state">
+                  <div class="rb-empty-icon">📋</div>
+                  <div class="rb-empty-title">Belum Ada Log Aktivitas</div>
+                  <div class="rb-empty-desc">Log aktivitas garasi akan muncul di sini setelah ada penambahan, perubahan, atau penghapusan motor.</div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <% if (stats.lastActivity) { %>
+      <div style="text-align: center; margin-top: 1rem; color: var(--rb-steel); font-size: 0.875rem;">
+        Aktivitas terakhir: <%= new Date(stats.lastActivity).toLocaleString('id-ID') %>
+      </div>
+    <% } %>
+
+  </main>
+
+  <script src="/admin/assets/mobile-nav.js"></script>
+</body>
+</html>

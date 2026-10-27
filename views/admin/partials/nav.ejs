@@ -1,0 +1,168 @@
+<%
+  const active = typeof activeTab !== 'undefined' ? activeTab : '';
+  const badge = typeof badgeText !== 'undefined' ? badgeText : 'ANALYTICS CENTER';
+  const pending = Number(locals.pendingApprovalsCount || 0);
+  const currentAdmin = locals.admin || { name: 'Administrator', email: 'admin@racebox.local' };
+%>
+
+<!-- Header Navigasi Terpadu RaceBox -->
+<header class="rb-header">
+  <a href="/admin" class="rb-brand">
+    <div class="rb-logo-mark">R</div>
+    <div class="rb-brand-title">RACE<span>BOX</span></div>
+    <div class="rb-brand-badge"><%= badge %></div>
+  </a>
+
+  <!-- Navigasi Desktop -->
+  <nav class="rb-nav-links">
+    <a href="/admin" class="rb-nav-link <%= active === 'dashboard' ? 'active' : '' %>">
+      <span>Dashboard</span>
+    </a>
+    <a href="/admin/garage-owners" class="rb-nav-link <%= active === 'garage-owners' ? 'active' : '' %>">
+      <span>Garasi / Pemilik</span>
+    </a>
+    <a href="/admin/vehicles" class="rb-nav-link <%= active === 'vehicles' ? 'active' : '' %>">
+      <span>Semua Motor</span>
+    </a>
+    <a href="/admin/races" class="rb-nav-link <%= active === 'races' ? 'active' : '' %>">
+      <span>Sesi Pengujian</span>
+    </a>
+    <a href="/admin/users" class="rb-nav-link <%= active === 'users' ? 'active' : '' %>">
+      <span>Pengguna</span>
+    </a>
+    <a href="/admin/approvals" class="rb-nav-link <%= active === 'approvals' ? 'active' : '' %>">
+      <span>Persetujuan</span>
+      <% if (pending > 0) { %>
+        <span class="rb-badge-alert"><%= pending %></span>
+      <% } %>
+    </a>
+  </nav>
+
+  <!-- User & Status Desktop -->
+  <div class="rb-header-right">
+    <div class="rb-status-badge">
+      <span class="rb-status-dot <%= (typeof dbConnected === 'undefined' || dbConnected) ? '' : 'offline' %>"></span>
+      <span><%= (typeof dbConnected === 'undefined' || dbConnected) ? 'MySQL Terhubung' : 'Database Terputus' %></span>
+    </div>
+    <div class="rb-user-pill">
+      Admin: <strong><%= currentAdmin.name %></strong>
+    </div>
+    <form method="post" action="/admin/logout" style="margin:0;">
+      <button type="submit" class="btn btn-secondary btn-sm">Logout</button>
+    </form>
+  </div>
+
+  <!-- Mobile Hamburger Menu Button -->
+  <button class="rb-mobile-menu-btn" id="rbMobileMenuBtn" type="button" aria-label="Buka Menu Navigasi">
+    <span class="rb-menu-line"></span>
+    <span class="rb-menu-line"></span>
+    <span class="rb-menu-line"></span>
+    <% if (pending > 0) { %>
+      <span class="rb-menu-alert-dot"></span>
+    <% } %>
+  </button>
+</header>
+
+<!-- Mobile Drawer Backdrop -->
+<div class="rb-drawer-backdrop" id="rbDrawerBackdrop"></div>
+
+<!-- Mobile Navigation Drawer -->
+<aside class="rb-mobile-drawer" id="rbMobileDrawer" aria-label="Menu Mobile">
+  <div class="rb-drawer-header">
+    <div class="rb-brand">
+      <div class="rb-logo-mark">R</div>
+      <div class="rb-brand-title">RACE<span>BOX</span></div>
+    </div>
+    <button class="rb-drawer-close" id="rbDrawerCloseBtn" type="button" aria-label="Tutup Menu">✕</button>
+  </div>
+
+  <div class="rb-drawer-user-card">
+    <div class="rb-drawer-avatar">
+      <%= currentAdmin.name.charAt(0).toUpperCase() %>
+    </div>
+    <div class="rb-drawer-user-info">
+      <div class="rb-drawer-user-name"><%= currentAdmin.name %></div>
+      <div class="rb-drawer-user-role">ADMINISTRATOR</div>
+      <div class="rb-drawer-db-status">
+        <span class="rb-status-dot"></span>
+        <span>MySQL Connected</span>
+      </div>
+    </div>
+  </div>
+
+  <nav class="rb-drawer-menu">
+    <a href="/admin" class="rb-drawer-item <%= active === 'dashboard' ? 'active' : '' %>">
+      <span class="rb-drawer-icon">📊</span>
+      <span class="rb-drawer-text">Dashboard Analytics</span>
+    </a>
+    <a href="/admin/garage-owners" class="rb-drawer-item <%= active === 'garage-owners' ? 'active' : '' %>">
+      <span class="rb-drawer-icon">👤</span>
+      <span class="rb-drawer-text">Garasi Per Pemilik</span>
+    </a>
+    <a href="/admin/vehicles" class="rb-drawer-item <%= active === 'vehicles' ? 'active' : '' %>">
+      <span class="rb-drawer-icon">🏍️</span>
+      <span class="rb-drawer-text">Semua Sepeda Motor</span>
+    </a>
+    <a href="/admin/races" class="rb-drawer-item <%= active === 'races' ? 'active' : '' %>">
+      <span class="rb-drawer-icon">⏱️</span>
+      <span class="rb-drawer-text">Sesi Uji Drag & Telemetri</span>
+    </a>
+    <a href="/admin/users" class="rb-drawer-item <%= active === 'users' ? 'active' : '' %>">
+      <span class="rb-drawer-icon">👥</span>
+      <span class="rb-drawer-text">Manajemen Pengguna</span>
+    </a>
+    <a href="/admin/approvals" class="rb-drawer-item <%= active === 'approvals' ? 'active' : '' %>">
+      <span class="rb-drawer-icon">🛡️</span>
+      <span class="rb-drawer-text">Persetujuan Pendaftaran</span>
+      <% if (pending > 0) { %>
+        <span class="rb-badge-alert"><%= pending %></span>
+      <% } %>
+    </a>
+    <div class="rb-drawer-divider"></div>
+    <a href="/admin/garage-logs" class="rb-drawer-item <%= active === 'garage-logs' ? 'active' : '' %>">
+      <span class="rb-drawer-icon">📋</span>
+      <span class="rb-drawer-text">Log Aktivitas Garasi</span>
+    </a>
+    <a href="/admin/register-status" target="_blank" class="rb-drawer-item">
+      <span class="rb-drawer-icon">🔍</span>
+      <span class="rb-drawer-text">Halaman Status Publik</span>
+    </a>
+  </nav>
+
+  <div class="rb-drawer-footer">
+    <form method="post" action="/admin/logout" style="width:100%;margin:0;">
+      <button type="submit" class="btn btn-danger" style="width:100%;padding:10px;">
+        Keluar (Logout)
+      </button>
+    </form>
+  </div>
+</aside>
+
+<!-- Native App Mobile Bottom Navigation Bar (iOS / Android Style) -->
+<nav class="rb-bottom-nav" aria-label="Navigasi Bawah">
+  <a href="/admin" class="rb-bottom-item <%= active === 'dashboard' ? 'active' : '' %>">
+    <span class="rb-bottom-icon">📊</span>
+    <span class="rb-bottom-label">Dashboard</span>
+  </a>
+  <a href="/admin/vehicles" class="rb-bottom-item <%= active === 'vehicles' ? 'active' : '' %>">
+    <span class="rb-bottom-icon">🏍️</span>
+    <span class="rb-bottom-label">Garasi</span>
+  </a>
+  <a href="/admin/races" class="rb-bottom-item <%= active === 'races' ? 'active' : '' %>">
+    <span class="rb-bottom-icon">⏱️</span>
+    <span class="rb-bottom-label">Sesi Uji</span>
+  </a>
+  <a href="/admin/users" class="rb-bottom-item <%= active === 'users' ? 'active' : '' %>">
+    <span class="rb-bottom-icon">👥</span>
+    <span class="rb-bottom-label">Pengguna</span>
+  </a>
+  <a href="/admin/approvals" class="rb-bottom-item <%= active === 'approvals' ? 'active' : '' %>">
+    <span class="rb-bottom-icon">
+      🛡️
+      <% if (pending > 0) { %>
+        <span class="rb-bottom-badge"><%= pending %></span>
+      <% } %>
+    </span>
+    <span class="rb-bottom-label">Approval</span>
+  </a>
+</nav>

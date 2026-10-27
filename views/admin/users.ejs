@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RaceBox - Manajemen Pengguna</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/style.css">
+</head>
+<body>
+
+  <%- include('partials/nav', { activeTab: 'users', badgeText: 'ANALYTICS CENTER' }) %>
+
+  <main class="rb-container">
+
+    <div class="rb-page-header">
+      <div class="rb-page-title-group">
+        <h1>Daftar Pengguna Terdaftar</h1>
+        <div class="rb-page-subtitle">
+          Total <%= users.length %> akun rider dan administrator yang terhubung ke server RaceBox
+        </div>
+      </div>
+      <div>
+        <a href="/admin" class="btn btn-secondary">← Kembali ke Dashboard</a>
+      </div>
+    </div>
+
+    <div class="rb-table-card">
+      <div class="rb-table-hint">
+        <span>👈 Geser tabel ke kanan untuk melihat data lengkap 👉</span>
+      </div>
+      <div class="rb-table-wrap">
+        <table class="rb-table">
+          <thead>
+            <tr>
+              <th>Nama Pengguna</th>
+              <th>Alamat Email</th>
+              <th>Peran Akun</th>
+              <th>Status Akun</th>
+              <th>Motor Terdaftar</th>
+              <th>Sesi Race</th>
+              <th>Tanggal Registrasi</th>
+              <th>User ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% users.forEach(u => { %>
+              <tr>
+                <td><strong><%= u.name %></strong></td>
+                <td><%= u.email %></td>
+                <td>
+                  <span class="badge <%= u.role === 'admin' ? 'badge-red' : 'badge-silver' %>">
+                    <%= u.role %>
+                  </span>
+                </td>
+                <td>
+                  <% if (u.status === 'pending') { %>
+                    <span class="badge-status badge-status-pending">Pending</span>
+                  <% } else if (u.status === 'approved') { %>
+                    <span class="badge-status badge-status-approved">Approved</span>
+                  <% } else if (u.status === 'rejected') { %>
+                    <span class="badge-status badge-status-rejected">Rejected</span>
+                  <% } else if (u.status === 'suspended') { %>
+                    <span class="badge-status badge-status-suspended">Suspended</span>
+                  <% } else { %>
+                    <span class="badge-status badge-status-approved">Approved</span>
+                  <% } %>
+                </td>
+                <td><%= u.vehicles_count ?? 0 %> motor</td>
+                <td><%= u.races_count ?? 0 %> sesi</td>
+                <td><%= new Date(u.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) %></td>
+                <td><code style="font-size:11px;color:var(--rb-steel);"><%= u.id %></code></td>
+              </tr>
+            <% }) %>
+            <% if (!users.length) { %>
+              <tr>
+                <td colspan="8" class="rb-empty-state">
+                  <div class="rb-empty-icon">👥</div>
+                  <div class="rb-empty-title">Belum Ada Pengguna Terdaftar</div>
+                  <div class="rb-empty-desc">Pengguna yang mendaftar melalui aplikasi mobile akan muncul di tabel ini.</div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/admin/assets/mobile-nav.js"></script>
+</body>
+</html>

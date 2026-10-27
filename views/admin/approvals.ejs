@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RaceBox - Persetujuan Pendaftaran Akun</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/style.css">
+</head>
+<body>
+
+  <%- include('partials/nav', { activeTab: 'approvals', badgeText: 'APPROVAL CENTER' }) %>
+
+  <main class="rb-container">
+
+    <!-- Flash message alerts -->
+    <% if (msg === 'approved') { %>
+      <div class="rb-alert-success">
+        <span>✓ Pendaftaran akun berhasil <strong>DISETUJUI (APPROVED)</strong>. Pengguna kini dapat login dan mengakses fitur RaceBox.</span>
+      </div>
+    <% } else if (msg === 'rejected') { %>
+      <div class="rb-alert-danger">
+        <span>✓ Pendaftaran akun telah <strong>DITOLAK (REJECTED)</strong>. Akses aplikasi privat dibatasi.</span>
+      </div>
+    <% } else if (msg === 'suspended') { %>
+      <div class="rb-alert-danger">
+        <span>✓ Akun pengguna berhasil <strong>DITANGGUHKAN (SUSPENDED)</strong>.</span>
+      </div>
+    <% } else if (msg === 'reactivated') { %>
+      <div class="rb-alert-success">
+        <span>✓ Akun pengguna berhasil <strong>DIAKTIFKAN KEMBALI</strong>.</span>
+      </div>
+    <% } else if (msg === 'deleted') { %>
+      <div class="rb-alert-danger">
+        <span>✓ Akun pengguna telah <strong>DIHAPUS PERMANEN</strong> dari database beserta seluruh data terkait.</span>
+      </div>
+    <% } else if (msg === 'error_not_found') { %>
+      <div class="rb-alert-danger">
+        <span>✕ Pengguna tidak ditemukan di database.</span>
+      </div>
+    <% } else if (msg === 'error_delete_admin') { %>
+      <div class="rb-alert-danger">
+        <span>✕ Akun <strong>ADMINISTRATOR</strong> tidak dapat dihapus demi keamanan sistem.</span>
+      </div>
+    <% } %>
+
+    <!-- Header Judul -->
+    <div class="rb-page-header">
+      <div class="rb-page-title-group">
+        <h1>Persetujuan Pendaftaran Pengguna</h1>
+        <div class="rb-page-subtitle">
+          Sistem verifikasi keamanan dan otorisasi akses publik ke Command Center RaceBox
+        </div>
+      </div>
+      <div class="rb-page-actions">
+        <a href="/admin/register-status" target="_blank" class="btn btn-secondary btn-sm">
+          🔍 Halaman Status Publik
+        </a>
+      </div>
+    </div>
+
+    <!-- Ringkasan Statistik Approval (Real DB) -->
+    <div class="rb-stats-grid">
+      
+      <div class="rb-stat-card" style="border-left: 3px solid #FFB020;">
+        <div class="rb-stat-header">
+          <span class="rb-stat-title">MENUNGGU VERIFIKASI</span>
+          <span class="badge-status badge-status-pending">PENDING</span>
+        </div>
+        <div class="rb-stat-value" style="color: #FFB020;"><%= stats.pending %></div>
+        <div class="rb-stat-sub">Memerlukan persetujuan admin</div>
+      </div>
+
+      <div class="rb-stat-card" style="border-left: 3px solid #3ECF8E;">
+        <div class="rb-stat-header">
+          <span class="rb-stat-title">AKUN DISETUJUI</span>
+          <span class="badge-status badge-status-approved">APPROVED</span>
+        </div>
+        <div class="rb-stat-value" style="color: #3ECF8E;"><%= stats.approved %></div>
+        <div class="rb-stat-sub">Memiliki akses penuh ke aplikasi</div>
+      </div>
+
+      <div class="rb-stat-card" style="border-left: 3px solid #FF3B30;">
+        <div class="rb-stat-header">
+          <span class="rb-stat-title">PENDAFTARAN DITOLAK</span>
+          <span class="badge-status badge-status-rejected">REJECTED</span>
+        </div>
+        <div class="rb-stat-value" style="color: #FF3B30;"><%= stats.rejected %></div>
+        <div class="rb-stat-sub">Akses privat diblokir sistem</div>
+      </div>
+
+      <div class="rb-stat-card" style="border-left: 3px solid #C084FC;">
+        <div class="rb-stat-header">
+          <span class="rb-stat-title">DITANGGUHKAN</span>
+          <span class="badge-status badge-status-suspended">SUSPENDED</span>
+        </div>
+        <div class="rb-stat-value" style="color: #C084FC;"><%= stats.suspended %></div>
+        <div class="rb-stat-sub">Akun dinonaktifkan sementara</div>
+      </div>
+
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="rb-toolbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+      
+      <!-- Filter Tabs -->
+      <div class="rb-filter-tabs-scroll">
+        <a href="/admin/approvals?status=pending<%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+           class="btn btn-sm <%= statusFilter === 'pending' ? 'btn-primary' : 'btn-secondary' %>">
+          Menunggu (<%= stats.pending %>)
+        </a>
+        <a href="/admin/approvals?status=approved<%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+           class="btn btn-sm <%= statusFilter === 'approved' ? 'btn-primary' : 'btn-secondary' %>">
+          Disetujui (<%= stats.approved %>)
+        </a>
+        <a href="/admin/approvals?status=rejected<%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+           class="btn btn-sm <%= statusFilter === 'rejected' ? 'btn-primary' : 'btn-secondary' %>">
+          Ditolak (<%= stats.rejected %>)
+        </a>
+        <a href="/admin/approvals?status=suspended<%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+           class="btn btn-sm <%= statusFilter === 'suspended' ? 'btn-primary' : 'btn-secondary' %>">
+          Ditangguhkan (<%= stats.suspended %>)
+        </a>
+        <a href="/admin/approvals?status=all<%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+           class="btn btn-sm <%= statusFilter === 'all' ? 'btn-primary' : 'btn-secondary' %>">
+          Semua Akun (<%= stats.total %>)
+        </a>
+      </div>
+
+      <!-- Search Input Form -->
+      <form method="get" action="/admin/approvals" style="display: flex; gap: 8px; margin: 0;">
+        <input type="hidden" name="status" value="<%= statusFilter %>">
+        <input type="text" name="search" placeholder="Cari nama atau email..." value="<%= searchQuery %>" 
+               class="form-control" style="width: 240px; padding: 6px 12px; font-size: 13px;">
+        <button type="submit" class="btn btn-secondary btn-sm">Cari</button>
+        <% if (searchQuery) { %>
+          <a href="/admin/approvals?status=<%= statusFilter %>" class="btn btn-secondary btn-sm">Reset</a>
+        <% } %>
+      </form>
+
+    </div>
+
+    <!-- Tabel Daftar Pendaftar -->
+    <div class="rb-panel">
+      <div class="rb-panel-header">
+        <span class="rb-panel-title">
+          DAFTAR PENDAFTAR (<%= registrations.length %> DITEMUKAN)
+        </span>
+        <span class="rb-panel-badge">DATABASE REAL-TIME</span>
+      </div>
+
+      <% if (registrations.length === 0) { %>
+        <div class="rb-empty-state">
+          <div class="rb-empty-icon">✓</div>
+          <div class="rb-empty-title">Tidak Ada Pendaftar Pada Kategori Ini</div>
+          <div class="rb-empty-desc">
+            <% if (statusFilter === 'pending') { %>
+              Semua pendaftaran telah ditinjau! Tidak ada akun baru yang menunggu keputusan.
+            <% } else { %>
+              Tidak ada data akun yang sesuai dengan kriteria filter saat ini.
+            <% } %>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="rb-table-hint">
+          <span>👈 Geser tabel ke kanan untuk melihat status & aksi keputusan 👉</span>
+        </div>
+        <div class="rb-table-container">
+          <table class="rb-table">
+            <thead>
+              <tr>
+                <th>NAMA PENDAFTAR</th>
+                <th>EMAIL</th>
+                <th>TANGGAL PENDAFTARAN</th>
+                <th>STATUS</th>
+                <th>CATATAN / ADMIN</th>
+                <th style="text-align: right;">AKSI KEPUTUSAN</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% registrations.forEach(function(u) { %>
+                <tr>
+                  <td>
+                    <strong style="color: var(--rb-chrome-white); font-size: 14px;"><%= u.name %></strong>
+                    <div style="font-size: 11px; color: var(--rb-steel); font-family: var(--rb-font-mono);">
+                      ID: <%= u.id.slice(0, 8) %>...
+                    </div>
+                  </td>
+                  <td>
+                    <span style="font-family: var(--rb-font-mono); color: var(--rb-silver);"><%= u.email %></span>
+                    <% if (u.role === 'admin') { %>
+                      <span class="rb-badge" style="background: rgba(225,6,0,0.2); color: var(--rb-primary); margin-left: 6px;">ADMIN</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <div style="color: var(--rb-chrome-white); font-size: 13px;">
+                      <%= new Date(u.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                    </div>
+                    <div style="font-size: 11px; color: var(--rb-steel);">
+                      <%= new Date(u.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %> WIB
+                    </div>
+                  </td>
+                  <td>
+                    <% if (u.status === 'pending') { %>
+                      <span class="badge-status badge-status-pending">Menunggu</span>
+                    <% } else if (u.status === 'approved') { %>
+                      <span class="badge-status badge-status-approved">Disetujui</span>
+                    <% } else if (u.status === 'rejected') { %>
+                      <span class="badge-status badge-status-rejected">Ditolak</span>
+                    <% } else if (u.status === 'suspended') { %>
+                      <span class="badge-status badge-status-suspended">Ditangguhkan</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (u.status === 'approved') { %>
+                      <div style="font-size: 12px; color: #3ECF8E;">
+                        Disetujui: <%= u.approved_by_name || 'Admin' %>
+                      </div>
+                      <% if (u.approved_at) { %>
+                        <div style="font-size: 11px; color: var(--rb-steel);">
+                          <%= new Date(u.approved_at).toLocaleDateString('id-ID') %>
+                        </div>
+                      <% } %>
+                    <% } else if (u.status === 'rejected') { %>
+                      <div style="font-size: 12px; color: #FF3B30;">
+                        Oleh: <%= u.rejected_by_name || 'Admin' %>
+                      </div>
+                      <% if (u.rejection_reason) { %>
+                        <div style="font-size: 11px; color: var(--rb-silver); max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="<%= u.rejection_reason %>">
+                          "<%= u.rejection_reason %>"
+                        </div>
+                      <% } %>
+                    <% } else if (u.status === 'suspended') { %>
+                      <div style="font-size: 12px; color: #C084FC;">
+                        Oleh: <%= u.suspended_by_name || 'Admin' %>
+                      </div>
+                    <% } else { %>
+                      <span style="color: var(--rb-steel); font-size: 12px;">Menunggu verifikasi</span>
+                    <% } %>
+                  </td>
+                  <td style="text-align: right;">
+                    <div style="display: inline-flex; gap: 6px; justify-content: flex-end;">
+                      
+                      <!-- Tombol ACC / Setujui -->
+                      <% if (u.status !== 'approved') { %>
+                        <button type="button" class="btn btn-success btn-sm"
+                                onclick="openApproveModal('<%= u.id %>', '<%= u.name.replace(/'/g, "\\'") %>', '<%= u.email %>')">
+                          ✓ Setujui (ACC)
+                        </button>
+                      <% } %>
+
+                      <!-- Tombol Tolak -->
+                      <% if (u.status === 'pending') { %>
+                        <button type="button" class="btn btn-danger btn-sm"
+                                onclick="openRejectModal('<%= u.id %>', '<%= u.name.replace(/'/g, "\\'") %>', '<%= u.email %>')">
+                          ✕ Tolak
+                        </button>
+                      <% } %>
+
+                      <!-- Tombol Tangguhkan jika sudah approved -->
+                      <% if (u.status === 'approved' && u.role !== 'admin') { %>
+                        <button type="button" class="btn btn-warning btn-sm"
+                                onclick="openSuspendModal('<%= u.id %>', '<%= u.name.replace(/'/g, "\\'") %>', '<%= u.email %>')">
+                          ⏸ Tangguhkan
+                        </button>
+                      <% } %>
+
+                      <!-- Tombol Detail Info -->
+                      <button type="button" class="btn btn-secondary btn-sm"
+                              onclick="openDetailModal('<%= u.id %>', '<%= u.name.replace(/'/g, "\\'") %>', '<%= u.email %>', '<%= u.status %>', '<%= u.created_at %>', '<%= (u.rejection_reason || '').replace(/'/g, "\\'") %>', '<%= (u.approved_by_name || '').replace(/'/g, "\\'") %>')">
+                        Detail
+                      </button>
+
+                      <!-- Tombol Hapus Akun -->
+                      <% if (u.role !== 'admin') { %>
+                        <button type="button" class="btn btn-danger btn-sm"
+                                onclick="openDeleteModal('<%= u.id %>', '<%= u.name.replace(/'/g, "\\'") %>', '<%= u.email %>')">
+                          Hapus
+                        </button>
+                      <% } %>
+
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Riwayat Keputusan Audit Log -->
+    <% if (history && history.length > 0) { %>
+      <div class="rb-panel" style="margin-top: 30px;">
+        <div class="rb-panel-header">
+          <span class="rb-panel-title">RIWAYAT KEPUTUSAN & AUDIT TRAIL</span>
+          <span class="rb-panel-badge"><%= history.length %> LOG AKTIVITAS</span>
+        </div>
+        <div class="rb-table-container">
+          <table class="rb-table">
+            <thead>
+              <tr>
+                <th>WAKTU KEPUTUSAN</th>
+                <th>AKUN PENGGUNA</th>
+                <th>TINDAKAN</th>
+                <th>ADMINISTRATOR</th>
+                <th>ALASAN / CATATAN</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% history.slice(0, 15).forEach(function(h) { %>
+                <tr>
+                  <td style="font-family: var(--rb-font-mono); font-size: 12px; color: var(--rb-steel);">
+                    <%= new Date(h.created_at).toLocaleString('id-ID') %>
+                  </td>
+                  <td>
+                    <strong><%= h.user_name %></strong>
+                    <div style="font-size: 11px; color: var(--rb-steel);"><%= h.user_email %></div>
+                  </td>
+                  <td>
+                    <% if (h.action === 'approved') { %>
+                      <span class="badge-status badge-status-approved">DISETUJUI</span>
+                    <% } else if (h.action === 'rejected') { %>
+                      <span class="badge-status badge-status-rejected">DITOLAK</span>
+                    <% } else if (h.action === 'suspended') { %>
+                      <span class="badge-status badge-status-suspended">DITANGGUHKAN</span>
+                    <% } else if (h.action === 'deleted') { %>
+                      <span class="badge-status badge-status-rejected">DIHAPUS</span>
+                    <% } else { %>
+                      <span class="badge-status badge-status-approved"><%= h.action.toUpperCase() %></span>
+                    <% } %>
+                  </td>
+                  <td style="color: var(--rb-chrome-white);">
+                    <%= h.admin_name %>
+                    <div style="font-size: 11px; color: var(--rb-steel);"><%= h.admin_email %></div>
+                  </td>
+                  <td style="font-size: 13px; color: var(--rb-silver);">
+                    <%= h.reason || '-' %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% } %>
+
+  </main>
+
+  <!-- MODAL: SETUJUI (ACC) KONFIRMASI -->
+  <div id="approveModal" class="rb-modal-overlay">
+    <div class="rb-modal">
+      <div class="rb-modal-header">
+        <div class="rb-modal-title" style="color: #3ECF8E;">Konfirmasi Persetujuan Akun</div>
+        <button class="rb-modal-close" onclick="closeModal('approveModal')">&times;</button>
+      </div>
+      <p style="color: var(--rb-silver); margin-bottom: 16px; font-size: 14px;">
+        Apakah Anda yakin ingin menyetujui pendaftaran akun berikut?
+      </p>
+      <div style="background: var(--rb-bg-card); padding: 14px; border-radius: 6px; border: 1px solid var(--rb-border); margin-bottom: 20px;">
+        <div style="font-size: 15px; font-weight: 700; color: #FFF;" id="approveModalName"></div>
+        <div style="font-size: 13px; color: var(--rb-steel); font-family: var(--rb-font-mono);" id="approveModalEmail"></div>
+      </div>
+      <div style="font-size: 12px; color: var(--rb-steel); margin-bottom: 15px;">
+        Setelah disetujui, akun ini akan langsung memiliki izin login dan mengakses seluruh fitur garasi, pengujian telemetri, dan analitik.
+      </div>
+      <form id="approveForm" method="post" action="">
+        <div class="rb-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('approveModal')">Batal</button>
+          <button type="submit" class="btn btn-success">✓ Ya, Setujui Akun (ACC)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TOLAK PENDAFTARAN -->
+  <div id="rejectModal" class="rb-modal-overlay">
+    <div class="rb-modal">
+      <div class="rb-modal-header">
+        <div class="rb-modal-title" style="color: #FF3B30;">Tolak Pendaftaran Akun</div>
+        <button class="rb-modal-close" onclick="closeModal('rejectModal')">&times;</button>
+      </div>
+      <p style="color: var(--rb-silver); margin-bottom: 16px; font-size: 14px;">
+        Berikan alasan penolakan untuk pendaftar berikut:
+      </p>
+      <div style="background: var(--rb-bg-card); padding: 14px; border-radius: 6px; border: 1px solid var(--rb-border); margin-bottom: 16px;">
+        <div style="font-size: 15px; font-weight: 700; color: #FFF;" id="rejectModalName"></div>
+        <div style="font-size: 13px; color: var(--rb-steel); font-family: var(--rb-font-mono);" id="rejectModalEmail"></div>
+      </div>
+      <form id="rejectForm" method="post" action="">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; color: var(--rb-steel); margin-bottom: 6px; font-weight: 600;">
+            ALASAN PENOLAKAN (AKAN DILIHAT OLEH PENDAFTAR):
+          </label>
+          <textarea name="reason" rows="3" class="form-control" style="width: 100%; resize: vertical;" 
+                    placeholder="Contoh: Identitas atau email tidak valid, pendaftaran di luar komunitas terdaftar." required></textarea>
+        </div>
+        <div style="font-size: 12px; color: var(--rb-steel);">
+          Akun tidak akan dihapus dari database, melainkan ditandai sebagai ditolak untuk tujuan pelacakan dan audit.
+        </div>
+        <div class="rb-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('rejectModal')">Batal</button>
+          <button type="submit" class="btn btn-danger">✕ Konfirmasi Tolak</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TANGGUHKAN AKUN -->
+  <div id="suspendModal" class="rb-modal-overlay">
+    <div class="rb-modal">
+      <div class="rb-modal-header">
+        <div class="rb-modal-title" style="color: #FFB020;">Tangguhkan Akun Pengguna</div>
+        <button class="rb-modal-close" onclick="closeModal('suspendModal')">&times;</button>
+      </div>
+      <p style="color: var(--rb-silver); margin-bottom: 16px; font-size: 14px;">
+        Nonaktifkan sementara akses akun berikut:
+      </p>
+      <div style="background: var(--rb-bg-card); padding: 14px; border-radius: 6px; border: 1px solid var(--rb-border); margin-bottom: 16px;">
+        <div style="font-size: 15px; font-weight: 700; color: #FFF;" id="suspendModalName"></div>
+        <div style="font-size: 13px; color: var(--rb-steel); font-family: var(--rb-font-mono);" id="suspendModalEmail"></div>
+      </div>
+      <form id="suspendForm" method="post" action="">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; color: var(--rb-steel); margin-bottom: 6px; font-weight: 600;">
+            ALASAN PENANGGUHAN:
+          </label>
+          <textarea name="reason" rows="2" class="form-control" style="width: 100%; resize: vertical;"
+                    placeholder="Contoh: Pelanggaran ketentuan pengujian telemetri atau investigasi keamanan." required></textarea>
+        </div>
+        <div class="rb-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('suspendModal')">Batal</button>
+          <button type="submit" class="btn btn-warning">⏸ Konfirmasi Tangguhkan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: HAPUS AKUN PERMANEN -->
+  <div id="deleteModal" class="rb-modal-overlay">
+    <div class="rb-modal">
+      <div class="rb-modal-header">
+        <div class="rb-modal-title" style="color: #FF3B30;">Hapus Akun Permanen</div>
+        <button class="rb-modal-close" onclick="closeModal('deleteModal')">&times;</button>
+      </div>
+      <p style="color: var(--rb-silver); margin-bottom: 16px; font-size: 14px;">
+        <strong style="color: #FF3B30;">PERINGATAN:</strong> Tindakan ini tidak dapat dibatalkan. Akun beserta seluruh data (kendaraan, sesi pengujian, telemetri) akan dihapus permanen dari database.
+      </p>
+      <div style="background: var(--rb-bg-card); padding: 14px; border-radius: 6px; border: 1px solid var(--rb-border); margin-bottom: 16px;">
+        <div style="font-size: 15px; font-weight: 700; color: #FFF;" id="deleteModalName"></div>
+        <div style="font-size: 13px; color: var(--rb-steel); font-family: var(--rb-font-mono);" id="deleteModalEmail"></div>
+      </div>
+      <form id="deleteForm" method="post" action="">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; color: var(--rb-steel); margin-bottom: 6px; font-weight: 600;">
+            KETIK <strong style="color: #FF3B30;">HAPUS</strong> UNTUK KONFIRMASI:
+          </label>
+          <input type="text" name="confirm" class="form-control" style="width: 100%;" 
+                 placeholder="Ketik HAPUS di sini..." required pattern="HAPUS" autocomplete="off">
+        </div>
+        <div class="rb-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('deleteModal')">Batal</button>
+          <button type="submit" class="btn btn-danger">Hapus Permanen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: DETAIL PENDAFTAR -->
+  <div id="detailModal" class="rb-modal-overlay">
+    <div class="rb-modal">
+      <div class="rb-modal-header">
+        <div class="rb-modal-title">Detail Profil Pendaftar</div>
+        <button class="rb-modal-close" onclick="closeModal('detailModal')">&times;</button>
+      </div>
+      <div class="rb-kv-row">
+        <div class="rb-kv-label">Nama Lengkap</div>
+        <div class="rb-kv-value" id="detailModalName">-</div>
+      </div>
+      <div class="rb-kv-row">
+        <div class="rb-kv-label">Email</div>
+        <div class="rb-kv-value" id="detailModalEmail">-</div>
+      </div>
+      <div class="rb-kv-row">
+        <div class="rb-kv-label">Status Saat Ini</div>
+        <div class="rb-kv-value" id="detailModalStatus">-</div>
+      </div>
+      <div class="rb-kv-row">
+        <div class="rb-kv-label">Tanggal Registrasi</div>
+        <div class="rb-kv-value" id="detailModalDate">-</div>
+      </div>
+      <div class="rb-kv-row">
+        <div class="rb-kv-label">Disetujui Oleh</div>
+        <div class="rb-kv-value" id="detailModalApprovedBy">-</div>
+      </div>
+      <div class="rb-kv-row" id="detailModalReasonRow">
+        <div class="rb-kv-label">Alasan Penolakan</div>
+        <div class="rb-kv-value" style="color: #FF3B30;" id="detailModalReason">-</div>
+      </div>
+      <div class="rb-modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('detailModal')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openApproveModal(id, name, email) {
+      document.getElementById('approveModalName').textContent = name;
+      document.getElementById('approveModalEmail').textContent = email;
+      document.getElementById('approveForm').action = '/admin/approvals/' + id + '/approve';
+      document.getElementById('approveModal').classList.add('active');
+    }
+
+    function openRejectModal(id, name, email) {
+      document.getElementById('rejectModalName').textContent = name;
+      document.getElementById('rejectModalEmail').textContent = email;
+      document.getElementById('rejectForm').action = '/admin/approvals/' + id + '/reject';
+      document.getElementById('rejectModal').classList.add('active');
+    }
+
+    function openSuspendModal(id, name, email) {
+      document.getElementById('suspendModalName').textContent = name;
+      document.getElementById('suspendModalEmail').textContent = email;
+      document.getElementById('suspendForm').action = '/admin/approvals/' + id + '/suspend';
+      document.getElementById('suspendModal').classList.add('active');
+    }
+
+    function openDetailModal(id, name, email, status, date, reason, approvedBy) {
+      document.getElementById('detailModalName').textContent = name;
+      document.getElementById('detailModalEmail').textContent = email;
+      document.getElementById('detailModalStatus').textContent = status.toUpperCase();
+      document.getElementById('detailModalDate').textContent = new Date(date).toLocaleString('id-ID');
+      document.getElementById('detailModalApprovedBy').textContent = approvedBy || '-';
+      
+      const reasonRow = document.getElementById('detailModalReasonRow');
+      if (reason) {
+        reasonRow.style.display = 'flex';
+        document.getElementById('detailModalReason').textContent = reason;
+      } else {
+        reasonRow.style.display = 'none';
+      }
+      document.getElementById('detailModal').classList.add('active');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    function openDeleteModal(id, name, email) {
+      document.getElementById('deleteModalName').textContent = name;
+      document.getElementById('deleteModalEmail').textContent = email;
+      document.getElementById('deleteForm').action = '/admin/approvals/' + id + '/delete';
+      var confirmInput = document.querySelector('#deleteForm input[name="confirm"]');
+      confirmInput.value = '';
+      document.getElementById('deleteModal').classList.add('active');
+    }
+
+    // Close on overlay click
+    document.querySelectorAll('.rb-modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.classList.remove('active');
+        }
+      });
+    });
+  </script>
+
+  <script src="/admin/assets/mobile-nav.js"></script>
+</body>
+</html>

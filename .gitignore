@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.local
+npm-debug.log*
+
+# Flutter remnants
+lib/
+.dart_tool/
+.flutter-plugins-dependencies
+pubspec.lock
+pubspec.yaml
+analysis_options.yaml
